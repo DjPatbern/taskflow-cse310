@@ -60,9 +60,11 @@ const sampleTasks = [
     due_date: "2026-11-19",
   },
 ];
+// Creates a unique identifier for tasks stored in local demonstration mode.
 const uid = () =>
   globalThis.crypto?.randomUUID?.() || String(Date.now() + Math.random());
 
+// Renders the TaskFlow application and manages task state, persistence, and interactions.
 export default function App() {
   const [tasks, setTasks] = useState([]);
   const [view, setView] = useState("Dashboard");
@@ -77,7 +79,9 @@ export default function App() {
   const isDemo = !supabase;
 
   // In demo mode tasks persist in this browser; with Supabase they persist in PostgreSQL.
+  // Loads tasks from Supabase or local storage when the application starts.
   useEffect(() => {
+    // Retrieves the initial task list from the configured persistence provider.
     async function load() {
       try {
         if (supabase) {
@@ -100,11 +104,13 @@ export default function App() {
     load();
   }, []);
 
+  // Saves task changes to local storage while the app is running in demo mode.
   useEffect(() => {
     if (!isDemo && tasks.length >= 0) return;
     if (!loading) localStorage.setItem("taskflow-demo", JSON.stringify(tasks));
   }, [tasks, isDemo, loading]);
 
+  // Computes the tasks that match the current search text and priority filter.
   const filtered = useMemo(
     () =>
       tasks.filter((task) => {
@@ -129,11 +135,13 @@ export default function App() {
     .sort((a, b) => a.due_date.localeCompare(b.due_date))
     .slice(0, 4);
 
+  // Opens an empty task form for creating a new task.
   function openCreate() {
     setEditing(null);
     setForm(emptyForm);
     setModalOpen(true);
   }
+  // Opens the task form and fills it with the selected task's current values.
   function openEdit(task) {
     setEditing(task.id);
     setForm({
@@ -148,6 +156,7 @@ export default function App() {
   }
 
   // Every database mutation checks for errors before updating React state.
+  // Validates and saves a new or edited task to the active persistence provider.
   async function saveTask(event) {
     event.preventDefault();
     if (!form.title.trim()) return setNotice("Task title is required.");
@@ -195,6 +204,7 @@ export default function App() {
     }
   }
 
+  // Updates a task's status in storage and synchronizes the visible task state.
   async function changeStatus(task, status) {
     try {
       if (supabase) {
@@ -213,6 +223,7 @@ export default function App() {
     }
   }
 
+  // Confirms and permanently removes a task from storage and the interface.
   async function deleteTask(task) {
     if (!window.confirm(`Delete “${task.title}”?`)) return;
     try {
@@ -661,6 +672,7 @@ export default function App() {
   );
 }
 
+// Renders a dashboard statistic card with its icon, value, and supporting label.
 function Stat({ icon, label, value, foot, tone }) {
   return (
     <article className="stat-card">
